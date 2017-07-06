@@ -1,4 +1,5 @@
 from player import *
+from ai import *
 from random import random
 
 class State(object):
@@ -46,6 +47,28 @@ class State(object):
             else:
                 raise Exception('player already exists')
 
+        if player_type == 'random':
+            if not player_name in self.names:
+                # instanciate player
+                player = RandomBet(player_name)
+                # append player objet
+                self.active_players.append(player)
+                # add name list
+                self.names.add(player_name)
+            else:
+                raise Exception('player already exists')
+
+        if player_type == '1324':
+            if not player_name in self.names:
+                # instanciate player
+                player = System1324(player_name)
+                # append player objet
+                self.active_players.append(player)
+                # add name list
+                self.names.add(player_name)
+            else:
+                raise Exception('player already exists')
+
     def add_player(self, player_type = 'human', name = ''):
         '''Add new players to the object
 
@@ -69,6 +92,28 @@ class State(object):
                 else:
                     raise Exception('player already exists')
 
+            if player_type == 'random':
+                if len(name) == 0:
+                    name = 'Player ' + str(len(self.active_players))
+                if not name in self.names:
+                    # initialize player
+                    self.active_players.append(RandomBet(name))
+                    # append name list
+                    self.names.add(name)
+                else:
+                    raise Exception('player already exists')
+
+            if player_type == '1324':
+                if len(name) == 0:
+                    name = 'Player ' + str(len(self.active_players))
+                if not name in self.names:
+                    # initialize player
+                    self.active_players.append(System1324(name))
+                    # append name list
+                    self.names.add(name)
+                else:
+                    raise Exception('player already exists')
+
     def update_state(self):
         ''' Run one deal of the game by updating the state object
 
@@ -82,30 +127,31 @@ class State(object):
         # block modifications in setting once the game starts
         self.set_up = False
 
-        # 1. Collect bets and guesses from all players
-        guesses = []
-        for p in self.active_players:
-            guesses.append(p.bet())
+        # at least one player has to be playing the game
+        if len(self.active_players)>0:
 
-        # 2. Deal
-        result = self.deal()
+            # 1. Collect bets and guesses from all players
+            guesses = []
+            for p in self.active_players:
+                guesses.append(p.bet())
 
-        # 3. Distribute rewards to winners
-        for index, g in enumerate(guesses): # unpack guesses
-            # get the current player
-            player = self.active_players[index]
-            # calculate the cash back
-            value = self.cash_back(result, g[0], g[1])
-            # update the budget1
-            player.retrieve(value)
-            # update the information in player onject
-            player.update(value)
-            print player.get_name()
-            print player.budget
-            # if player's budget is 0, remove player from the active game
-            if player.budget == 0:
-                self.active_players.remove(player)
-                self.players.append(player)
+            # 2. Deal
+            result = self.deal()
+
+            # 3. Distribute rewards to winners
+            for index, g in enumerate(guesses): # unpack guesses
+                # get the current player
+                player = self.active_players[index]
+                # calculate the cash back
+                value = self.cash_back(result, g[0], g[1])
+                # update the budget1
+                player.retrieve(value)
+                # update the information in player onject
+                player.update(value)
+                # if player's budget is 0, remove player from the active game
+                if player.budget == 0:
+                    self.active_players.remove(player)
+                    self.players.append(player)
 
 
     def deal(self):
@@ -202,8 +248,8 @@ class Game(object):
 
         set_up = True
         # wait user input for the correct player type
-        while player_type not in ['human']:
-            player_type = raw_input("select player type (human): ")
+        while player_type not in ['human', 'random', '1324']:
+            player_type = raw_input("select player type (human, random, 1324): ")
         # wait user input fot the player name, default if empty
         player_name = raw_input("select player name (default if empty): ")
 
@@ -225,8 +271,8 @@ class Game(object):
             # if Y, ask for another player
             else:
                 player_type = ''
-                while player_type not in ['human']:
-                    player_type = raw_input("select player type: ")
+                while player_type not in ['human', 'random', '1324']:
+                    player_type = raw_input("select player type (human, random, 1324): ")
 
                 player_name = raw_input("select player name (default if empty): ")
 
@@ -252,11 +298,14 @@ class Game(object):
         else:
             self.rounds = rounds
 
-    def play(self):
+    def play(self, do_print = True):
         '''start the game loop
 
         check if the set up is complete.
         If so, start iterating the state update by the number of rounds
+
+        Args:
+            do_print: boolean to control if you want to print game stats on console
         '''
         if self.set_up:
             for _ in range(self.rounds):
@@ -266,10 +315,11 @@ class Game(object):
             for p in self.state.active_players:
                 self.state.players.append(p)
 
-            for p in self.state.players:
-                print 'Stats for ' + p.get_name()
-                print ' '
-                p.show_stats()
+            if do_print:
+                for p in self.state.players:
+                    print 'Stats for ' + p.get_name()
+                    print ' '
+                    p.show_stats()
         else:
             print ('finish setup')
 
@@ -282,7 +332,7 @@ def main():
     g = Game()
     # set_up
     g.set_up()
-    g.set_game_round(30)
+    g.set_game_round(100)
     # enter the loop
     g.play()
 

@@ -191,7 +191,6 @@ class Player(object):
 
         # tied the previous game
         elif value == self.current_bet:
-            self.last_win += 1
             return None
 
         # won the previous game
@@ -222,5 +221,4 @@ class Player(object):
         print 'total loss in recent 3: ' + str(self.total_loss_in_past_3)
         print 'total loss in recent 5: ' + str(self.total_loss_in_past_5)
         print 'total loss in recent 10: ' + str(self.total_loss_in_past_10)
-        print 'record: ' + str(self.game_record) 
         print ' '
