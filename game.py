@@ -9,7 +9,7 @@ class State(object):
     Every turn the State instance will be updated uing update method.
 
     Attributes:
-        players: an array of Player object
+        players: an array of Player object, when player finished playing, push to this array
         active_players: an array of players who are still playing the game
         names: Hashset of player names to avoid duplicate players
         set_up: Boolean to block setting modifications once the game starts
@@ -40,7 +40,6 @@ class State(object):
                 # instanciate player
                 player = Player(player_name)
                 # append player objet
-                self.players.append(player)
                 self.active_players.append(player)
                 # add name list
                 self.names.add(player_name)
@@ -61,10 +60,9 @@ class State(object):
         if self.set_up:
             if player_type == 'human':
                 if len(name) == 0:
-                    name = 'Player ' + str(len(self.players))
+                    name = 'Player ' + str(len(self.active_players))
                 if not name in self.names:
                     # initialize player
-                    self.players.append(Player(name))
                     self.active_players.append(Player(name))
                     # append name list
                     self.names.add(name)
@@ -102,10 +100,12 @@ class State(object):
             player.retrieve(value)
             # update the information in player onject
             player.update(value)
+            print player.get_name()
             print player.budget
             # if player's budget is 0, remove player from the active game
             if player.budget == 0:
                 self.active_players.remove(player)
+                self.players.append(player)
 
 
     def deal(self):
@@ -176,12 +176,116 @@ class State(object):
 
 class Game(object):
     ''' Game class will be responsible for dealing with game cycle and updating state
+
+    Attributes:
+        state: the game state
+        rounds: how many games of baccarat the player wants to play
+        default is 10
+        ready_to_play: boolean to block users to play the game without setting
     '''
+
+    state = None
+    rounds = 10
+    ready_to_play = False
     def __init__(self):
         pass
-        
+
+    def set_up(self):
+        '''instantiate the game state
+
+        This method has to be called before starting the game
+        change the ready_to_play attribute to True at the end of
+        this function
+        '''
+
+        player_type = ''
+
+        set_up = True
+        # wait user input for the correct player type
+        while player_type not in ['human']:
+            player_type = raw_input("select player type (human): ")
+        # wait user input fot the player name, default if empty
+        player_name = raw_input("select player name (default if empty): ")
+
+        # set up state
+        if len(player_name) == 0:
+            self.state = State(player_type = player_type)
+        else:
+            self.state = State(player_type = player_type, player_name = player_name)
+
+        # wait user input for additional
+        while set_up:
+            YorN = ''
+            while YorN not in ['Y', 'N']:
+                YorN = raw_input("select more players? (Y or N): ")
+
+            # if N, move exit the function
+            if YorN == 'N':
+                set_up = False
+            # if Y, ask for another player
+            else:
+                player_type = ''
+                while player_type not in ['human']:
+                    player_type = raw_input("select player type: ")
+
+                player_name = raw_input("select player name (default if empty): ")
+
+                self.state.add_player(player_type = player_type, name = player_name)
+
+        self.ready_to_play = True
+
+    def set_game_round(self, rounds):
+        '''set the number of games the player want to play before finishing the game
+        default is set to 10 games
+        When training AI, this value should be high, (1000 ~)
+
+        Args:
+            rounds: int value specifying the number of games to play
+
+        Raises:
+            Exception: if the input is 0 or not a number
+        '''
+
+        if type(rounds) != type(0) or rounds == 0:
+            raise  Exception('Invalid round number')
+
+        else:
+            self.rounds = rounds
+
+    def play(self):
+        '''start the game loop
+
+        check if the set up is complete.
+        If so, start iterating the state update by the number of rounds
+        '''
+        if self.set_up:
+            for _ in range(self.rounds):
+                self.state.update_state()
+
+            # all active players to players
+            for p in self.state.active_players:
+                self.state.players.append(p)
+
+            for p in self.state.players:
+                print 'Stats for ' + p.get_name()
+                print ' '
+                p.show_stats()
+        else:
+            print ('finish setup')
+
+
+def main():
+    '''main game loop
+    set up Game object, and enter the loop
+    '''
+    # create an object
+    g = Game()
+    # set_up
+    g.set_up()
+    g.set_game_round(30)
+    # enter the loop
+    g.play()
+
+
 if __name__ == '__main__':
-    s = State()
-    for _ in range(100):
-        s.update_state()
-    s.players[0].show_stats()
+    main()

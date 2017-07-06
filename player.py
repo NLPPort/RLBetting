@@ -1,4 +1,3 @@
-from deck import *
 from random import randint
 
 class Player(object):
@@ -223,3 +222,5 @@ class Player(object):
         print 'total loss in recent 3: ' + str(self.total_loss_in_past_3)
         print 'total loss in recent 5: ' + str(self.total_loss_in_past_5)
         print 'total loss in recent 10: ' + str(self.total_loss_in_past_10)
+        print 'record: ' + str(self.game_record) 
+        print ' '
