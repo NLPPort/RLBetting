@@ -1,30 +1,41 @@
 from player import *
 from random import random
 
-'''
-This class represents each game state of the bacarrat
-When training RL agent, this class will be its input
-'''
+class State(object):
+    ''' Class to represent game state
 
-class State:
-    ## Game state##
+    This class contains all information that requires to update each turn.
+    State object will be instanciated at the beginneing of game.
+    Every turn the State instance will be updated uing update method.
+
+    Attributes:
+        players: an array of Player object
+        active_players: an array of players who are still playing the game
+        names: Hashset of player names to avoid duplicate players
+        set_up: Boolean to block setting modifications once the game starts
+    '''
+
     # player
     players = []
     # players who are still playing
     active_players = []
     # names
     names = set()
-    # how many games has been played
-    rounds = 0
-    # current player
-    current = 0
+    # allowing setup
+    set_up = True
 
-    '''
-    the constructor of the state represents the initial state of each player
-    '''
     def __init__(self, player_type = 'human', player_name = 'Player 0'):
+        ''' Constructor
+
+        Create a State object by specifying at least one player
+        Args:
+            player_type: specifies the type of Player object. Default is an interactive human player
+            player_name: the name of the player. Has to be unique from other players. Default is Player followed by the number of player (0 indexed)
+
+        Raises:
+            Exception : when the player names have duplicates
+        '''
         if player_type == 'human':
-            # I could ask for name input here
             if not player_name in self.names:
                 # instanciate player
                 player = Player(player_name)
@@ -36,44 +47,53 @@ class State:
             else:
                 raise Exception('player already exists')
 
-    '''
-    add new player to the game
-    throw an exception if the player already exists
-    '''
-    def add_player(self, name = '', player_type = 'human'):
-        if player_type == 'human':
-            if len(name) == 0:
-                name = 'Player ' + str(len(self.players))
-            if not name in self.names:
-                # initialize player
-                self.players.append(Player(name))
-                self.active_players.append(Player(name))
-                # append name list
-                self.names.add(name)
-            else:
-                raise Exception('player already exists')
+    def add_player(self, player_type = 'human', name = ''):
+        '''Add new players to the object
 
+        Args:
+            player_type: specifies the type of Player object. Default is an interactive human player
+            player_name: the name of the player. Has to be unique from other players. Default is Player followed by the number of player (0 indexed)
 
-    '''
-    update state by executing one deal of bacarrat
-    1. first collect the bet from all playrs
-    2. then dael the game
-    3. finally return the winning value to all players
-    '''
+        Raises:
+            Exception : when the player names have duplicates
+        '''
+        # allows new player only if the game has not started
+        if self.set_up:
+            if player_type == 'human':
+                if len(name) == 0:
+                    name = 'Player ' + str(len(self.players))
+                if not name in self.names:
+                    # initialize player
+                    self.players.append(Player(name))
+                    self.active_players.append(Player(name))
+                    # append name list
+                    self.names.add(name)
+                else:
+                    raise Exception('player already exists')
+
     def update_state(self):
+        ''' Run one deal of the game by updating the state object
+
+        The game of baccarat proceeds as follows
+        1. Collect bets and guesses from all active players
+        2. Deal
+        3. Distribute rewards to winners
+        4. Remove players if they have no money left
+        5. Continue
+        '''
+        # block modifications in setting once the game starts
+        self.set_up = False
+
+        # 1. Collect bets and guesses from all players
         guesses = []
-        # get current player
         for p in self.active_players:
             guesses.append(p.bet())
 
-
-        # once player starts the game, they cannot quit unless player's monwy is already 0
-
-        # bacaratt game odds
+        # 2. Deal
         result = self.deal()
 
-        # # calculate the cash-back
-        for index, g in enumerate(guesses):
+        # 3. Distribute rewards to winners
+        for index, g in enumerate(guesses): # unpack guesses
             # get the current player
             player = self.active_players[index]
             # calculate the cash back
@@ -87,24 +107,23 @@ class State:
             if player.budget == 0:
                 self.active_players.remove(player)
 
-        # shift the index
-        self.current = self.current+1 if self.current+1 < len(self.players) else 0
 
-
-
-
-    '''
-    simulate one deal of bacarrat with odds from online source
-    player odds : 44.62%
-    dealer odds : 45.85%
-    tie : 9.53 %
-
-    return integer encoding of game result
-    0 : player
-    1 : dealer
-    2 : tie
-    '''
     def deal(self):
+        ''' Baccarat deal simulator based on actual probability
+
+        Simulate one deal of bacarrat with odds from http://www.baccaratstrategies.net/Baccarat-Probabilities.html
+
+        player odds : 44.62%
+        dealer odds : 45.85%
+        tie : 9.53 %
+
+        Args: None
+
+        Return: integer encoding of game result
+            0 : player wins
+            1 : dealer wins
+            2 : tie
+        '''
         prob = random()
         # player wins with 44.62%
         if prob < .4462:
@@ -116,46 +135,51 @@ class State:
         else:
             return 2
 
-
-    '''
-    Calculate the cash_back based on the game result, bet, and bet price based on the online source
-    '''
     def cash_back(self, result, bet, price):
-        cash = 0
+        '''
+        Calculate the cash_back based on the game result, bet, and bet price based on the online source
+        If player bets on player and wins, return 100%
+        If player bets on dealer and wins, return 95%
+        If player bets on tie and wins, return 800%
+        Players will lose their commission unless the game ties and the player loses the bet
+
+        Args:
+            result: the integer encoding of game result (0 ~ 2)
+            bet: the guess of the player (0 ~ 2)
+            price: the amount of money the player bets. (1 ~ 20)
+
+        Return:
+            The int value for the player's gain accordingly by the odds from https://wizardofodds.com/games/baccarat/basics/
+        '''
+        cash = 0 # the player will lose their commission by default
         # if tie
         if result == 2:
+            # if win, winner will get 800% of commision
             if result == bet:
-                cash = 8 * float(price)
-
+                cash = 9*float(price)
+            # if lose, winner will get the commision back
             else:
                 cash = price
         # if player or dealer wins
         else:
-            # correctly guessed
+            # if wins,
             if result == bet:
                 # player wins
                 if result == 0:
-                    cash = 2 * float(price)
-                # dealer eins
+                    # if win, winner will get 100% of commission
+                    cash = 2*float(price)
+                # dealer wins
                 elif result == 1:
-                    cash = 1.95 * float(price)
-
+                    # if win, winner will get 95% of commission
+                    cash = 1.95*float(price)
         return cash
 
-
-
-
-'''
-Update State
-initialize state
-run game
-'''
-class Game:
+class Game(object):
+    ''' Game class will be responsible for dealing with game cycle and updating state
+    '''
     def __init__(self):
-        self.state = State()
-        self.players = []
-        self.rounds = 100
-
+        pass
+        
 if __name__ == '__main__':
     s = State()
     for _ in range(100):
