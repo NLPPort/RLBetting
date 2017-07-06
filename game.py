@@ -154,10 +154,10 @@ class Game:
     def __init__(self):
         self.state = State()
         self.players = []
-
+        self.rounds = 100
 
 if __name__ == '__main__':
     s = State()
-    for _ in range(1000):
+    for _ in range(100):
         s.update_state()
     s.players[0].show_stats()

@@ -1,4 +1,7 @@
 # Reinforcement Learning to Discover Betting Strategy
+
+Draft
+
 ## Case Study : *The Sting* (1973)
 
 Whenever I express my love for movies, often times people ask me what my all-time favorite movie is. This is very hard question to answer since I cannot compare 2 movies with the same criteria. Should I go for the old classic *Casablanca*, or my childhood memory of *Star Wars* franchise? Or even the nostalgia to my homeland, *Yojimbo* and *Tokyo Story*? Even though it seems just impossible to tell my 'all-time favorite', the up-lifting opening sequence of *The Sting* always has a special place in me.
