@@ -69,6 +69,17 @@ class State(object):
             else:
                 raise Exception('player already exists')
 
+        if player_type == '31':
+            if not player_name in self.names:
+                # instanciate player
+                player = Parlay31(player_name)
+                # append player objet
+                self.active_players.append(player)
+                # add name list
+                self.names.add(player_name)
+            else:
+                raise Exception('player already exists')
+
     def add_player(self, player_type = 'human', name = ''):
         '''Add new players to the object
 
@@ -111,6 +122,17 @@ class State(object):
                     self.active_players.append(System1324(name))
                     # append name list
                     self.names.add(name)
+                else:
+                    raise Exception('player already exists')
+
+            if player_type == '31':
+                if not player_name in self.names:
+                    # instanciate player
+                    player = Parlay31(player_name)
+                    # append player objet
+                    self.active_players.append(player)
+                    # add name list
+                    self.names.add(player_name)
                 else:
                     raise Exception('player already exists')
 
@@ -248,8 +270,8 @@ class Game(object):
 
         set_up = True
         # wait user input for the correct player type
-        while player_type not in ['human', 'random', '1324']:
-            player_type = raw_input("select player type (human, random, 1324): ")
+        while player_type not in ['human', 'random', '1324', '31']:
+            player_type = raw_input("select player type (human, random, 1324, 31): ")
         # wait user input fot the player name, default if empty
         player_name = raw_input("select player name (default if empty): ")
 
@@ -271,8 +293,8 @@ class Game(object):
             # if Y, ask for another player
             else:
                 player_type = ''
-                while player_type not in ['human', 'random', '1324']:
-                    player_type = raw_input("select player type (human, random, 1324): ")
+                while player_type not in ['human', 'random', '1324', '31']:
+                    player_type = raw_input("select player type (human, random, 1324, 31): ")
 
                 player_name = raw_input("select player name (default if empty): ")
 
@@ -332,7 +354,7 @@ def main():
     g = Game()
     # set_up
     g.set_up()
-    g.set_game_round(100)
+    g.set_game_round(1000)
     # enter the loop
     g.play()
 

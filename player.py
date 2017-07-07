@@ -13,10 +13,13 @@ class Player(object):
         budget: the total money the player has
         win: total times the player wins
         net_gain: total money the player has won
+        last_win: how many games has been played since the last win
         current_bet: player's current bet
+        prev_win: the value player won from the previous game
         biggest_win: player's biggest win from one game
         biggest_loss: player's biggest loss from one game
         consecutive_wins: player's consective wins
+        last_consecutive_wins: how many games has been played since the last consective wins
         consecutive_loss: player's consecutive loss
         total_win_in_past_n: player's total win in recent n games
         total_loss_in_past_n: player's total loss in recent n games
@@ -43,12 +46,16 @@ class Player(object):
         self.last_win = 0
         # current bet
         self.current_bet = 1
+        # previous win
+        self.prev_win = 0
         # return for the biggest win
         self.biggest_win = 0
         # loss for the biggest loses
         self.biggest_loss = 0
         # consecutive win
         self.consecutive_wins = 0
+        # last consecutive win since
+        self.last_consecutive_wins = 0
         # consecutive loss
         self.consecutive_loss = 0
         # total wins in previous 3 games
@@ -186,7 +193,9 @@ class Player(object):
             if self.biggest_loss > -self.current_bet:
                 self.biggest_loss = -(self.current_bet)
             self.consecutive_wins = 0
+            self.last_consecutive_wins += 1
             self.consecutive_loss += 1
+            self.prev_win = 0
             return None
 
         # tied the previous game
@@ -198,7 +207,12 @@ class Player(object):
             self.win += 1
             self.last_win = 0
             self.net_gain += (value - self.current_bet)
+            self.prev_win = value
             self.consecutive_wins += 1
+            if self.consecutive_wins == 2:
+                self.consecutive_wins = 0
+                self.last_consecutive_wins = 0
+
             self.consecutive_loss = 0
             if self.biggest_win < (value - self.current_bet):
                 self.biggest_win = value - self.current_bet
@@ -211,9 +225,11 @@ class Player(object):
         print 'total win: ' + str(self.win)
         print 'last win since: ' + str(self.last_win)
         print 'net win: ' + str(self.net_gain)
+        print 'previous win value: ' + str(self.prev_win)
         print 'biggest win: ' + str(self.biggest_win)
         print 'biggest loss: ' + str(self.biggest_loss)
         print 'consecutive wins: ' + str(self.consecutive_wins)
+        print 'last consecutive win since: ' + str(self.last_consecutive_wins)
         print 'consecutive loss: ' + str(self.consecutive_loss)
         print 'total win in recent 3: ' + str(self.total_win_in_past_3)
         print 'total win in recent 5: ' + str(self.total_win_in_past_5)
