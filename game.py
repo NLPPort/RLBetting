@@ -16,15 +16,6 @@ class State(object):
         set_up: Boolean to block setting modifications once the game starts
     '''
 
-    # player
-    players = []
-    # players who are still playing
-    active_players = []
-    # names
-    names = set()
-    # allowing setup
-    set_up = True
-
     def __init__(self, player_type = 'human', player_name = 'Player 0'):
         ''' Constructor
 
@@ -36,6 +27,15 @@ class State(object):
         Raises:
             Exception : when the player names have duplicates
         '''
+        # players
+        self.players = []
+        # name
+        self.names = set()
+        # players who are still playing
+        self.active_players = []
+        # allowing setup
+        self.set_up = True
+
         if player_type == 'human':
             if not player_name in self.names:
                 # instanciate player
@@ -175,6 +175,23 @@ class State(object):
                     self.active_players.remove(player)
                     self.players.append(player)
 
+    def returnResult(self, index = 0):
+        ''' Return the net win of the player at given index
+
+        Args:
+            index: the index of player in the list, default is 0
+
+        Return:
+            the net win of given player
+
+        Raises:
+            Exception: when index is out of range
+        '''
+        if index+1 < len(self.players):
+            raise Exception('Index out of range')
+
+        return self.players[0].net_gain
+
 
     def deal(self):
         ''' Baccarat deal simulator based on actual probability
@@ -258,49 +275,72 @@ class Game(object):
     def __init__(self):
         pass
 
-    def set_up(self):
+    def set_up(self, console = True):
         '''instantiate the game state
 
         This method has to be called before starting the game
         change the ready_to_play attribute to True at the end of
         this function
+
+        Args:
+            console: if True set up is done in console
         '''
 
         player_type = ''
 
         set_up = True
-        # wait user input for the correct player type
-        while player_type not in ['human', 'random', '1324', '31']:
-            player_type = raw_input("select player type (human, random, 1324, 31): ")
-        # wait user input fot the player name, default if empty
-        player_name = raw_input("select player name (default if empty): ")
 
-        # set up state
-        if len(player_name) == 0:
-            self.state = State(player_type = player_type)
-        else:
-            self.state = State(player_type = player_type, player_name = player_name)
+        # terminal setting
+        if console:
+            # wait user input for the correct player type
+            while player_type not in ['human', 'random', '1324', '31']:
+                player_type = raw_input("select player type (human, random, 1324, 31): ")
+            # wait user input fot the player name, default if empty
+            player_name = raw_input("select player name (default if empty): ")
 
-        # wait user input for additional
-        while set_up:
-            YorN = ''
-            while YorN not in ['Y', 'N']:
-                YorN = raw_input("select more players? (Y or N): ")
-
-            # if N, move exit the function
-            if YorN == 'N':
-                set_up = False
-            # if Y, ask for another player
+            # set up state
+            if len(player_name) == 0:
+                self.state = State(player_type = player_type)
             else:
-                player_type = ''
-                while player_type not in ['human', 'random', '1324', '31']:
-                    player_type = raw_input("select player type (human, random, 1324, 31): ")
+                self.state = State(player_type = player_type, player_name = player_name)
 
-                player_name = raw_input("select player name (default if empty): ")
+            # wait user input for additional
+            while set_up:
+                YorN = ''
+                while YorN not in ['Y', 'N']:
+                    YorN = raw_input("select more players? (Y or N): ")
 
-                self.state.add_player(player_type = player_type, name = player_name)
+                # if N, move exit the function
+                if YorN == 'N':
+                    set_up = False
+                # if Y, ask for another player
+                else:
+                    player_type = ''
+                    while player_type not in ['human', 'random', '1324', '31']:
+                        player_type = raw_input("select player type (human, random, 1324, 31): ")
+
+                    player_name = raw_input("select player name (default if empty): ")
+
+                    self.state.add_player(player_type = player_type, name = player_name)
 
         self.ready_to_play = True
+
+    def add_player(self, player_type = 'random'):
+        '''add player to the game state
+
+        Args:
+            player_type: type of player to add
+
+        Raises:
+            Exception: when the invalid player type is detected
+        '''
+        if player_type not in ['human', 'random', '1324', '31']:
+            Exception('invalid player type')
+
+        if not self.state:
+            self.state = State(player_type = player_type)
+        else:
+            self.state.add_player(player_type = player_type)
 
     def set_game_round(self, rounds):
         '''set the number of games the player want to play before finishing the game
@@ -344,6 +384,14 @@ class Game(object):
                     p.show_stats()
         else:
             print ('finish setup')
+
+    def reset(self):
+        '''Clean up the setting for the another game
+        '''
+        del self.state
+        self.state = None
+        self.rounds = 10
+        self.ready_to_play = False
 
 
 def main():
