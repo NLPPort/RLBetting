@@ -80,6 +80,28 @@ class State(object):
             else:
                 raise Exception('player already exists')
 
+        if player_type == 'martingale':
+            if not player_name in self.names:
+                # instanciate player
+                player = Martingale(player_name)
+                # append player objet
+                self.active_players.append(player)
+                # add name list
+                self.names.add(player_name)
+            else:
+                raise Exception('player already exists')
+
+        if player_type == 'flat':
+            if not player_name in self.names:
+                # instanciate player
+                player = Flat(player_name)
+                # append player objet
+                self.active_players.append(player)
+                # add name list
+                self.names.add(player_name)
+            else:
+                raise Exception('player already exists')
+
     def add_player(self, player_type = 'human', name = ''):
         '''Add new players to the object
 
@@ -126,13 +148,35 @@ class State(object):
                     raise Exception('player already exists')
 
             if player_type == '31':
-                if not player_name in self.names:
+                if not name in self.names:
                     # instanciate player
-                    player = Parlay31(player_name)
+                    player = Parlay31(name)
                     # append player objet
                     self.active_players.append(player)
                     # add name list
-                    self.names.add(player_name)
+                    self.names.add(name)
+                else:
+                    raise Exception('player already exists')
+
+            if player_type == 'martingale':
+                if not name in self.names:
+                    # instanciate player
+                    player = Martingale(name)
+                    # append player objet
+                    self.active_players.append(player)
+                    # add name list
+                    self.names.add(name)
+                else:
+                    raise Exception('player already exists')
+
+            if player_type == 'flat':
+                if not name in self.names:
+                    # instanciate player
+                    player = Flat(name)
+                    # append player objet
+                    self.active_players.append(player)
+                    # add name list
+                    self.names.add(name)
                 else:
                     raise Exception('player already exists')
 
@@ -174,6 +218,7 @@ class State(object):
                 if player.budget == 0:
                     self.active_players.remove(player)
                     self.players.append(player)
+                # player.show_stats()
 
     def returnResult(self, index = 0):
         ''' Return the net win of the player at given index
@@ -293,8 +338,8 @@ class Game(object):
         # terminal setting
         if console:
             # wait user input for the correct player type
-            while player_type not in ['human', 'random', '1324', '31']:
-                player_type = raw_input("select player type (human, random, 1324, 31): ")
+            while player_type not in ['human', 'random', '1324', '31', 'martingale', 'flat']:
+                player_type = raw_input("select player type (human, random, 1324, 31, martingale, flat): ")
             # wait user input fot the player name, default if empty
             player_name = raw_input("select player name (default if empty): ")
 
@@ -316,8 +361,8 @@ class Game(object):
                 # if Y, ask for another player
                 else:
                     player_type = ''
-                    while player_type not in ['human', 'random', '1324', '31']:
-                        player_type = raw_input("select player type (human, random, 1324, 31): ")
+                    while player_type not in ['human', 'random', '1324', '31', 'martingale', 'flat']:
+                        player_type = raw_input("select player type (human, random, 1324, 31, martingale, flat): ")
 
                     player_name = raw_input("select player name (default if empty): ")
 
@@ -334,7 +379,7 @@ class Game(object):
         Raises:
             Exception: when the invalid player type is detected
         '''
-        if player_type not in ['human', 'random', '1324', '31']:
+        if player_type not in ['human', 'random', '1324', '31', 'martingale', 'flat']:
             Exception('invalid player type')
 
         if not self.state:
@@ -402,7 +447,7 @@ def main():
     g = Game()
     # set_up
     g.set_up()
-    g.set_game_round(1000)
+    g.set_game_round(30)
     # enter the loop
     g.play()
 

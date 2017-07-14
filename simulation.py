@@ -37,22 +37,21 @@ class Simulation(object):
         # instanciate game class
 
         self.game = Game()
-        for i in range(6,11):
+        for p in player_types:
             netWin = np.array([])
             for _ in range(self.repeat):
-                for n in player_types:
-                    self.game.add_player(player_type = n)
-                self.game.set_game_round(i*10)
+                self.game.add_player(player_type = p)
+                self.game.set_game_round(100)
                 self.game.play()
                 netWin = np.append(netWin, self.game.state.returnResult())
                 self.game.reset()
-            sns.distplot(netWin, hist=False, label = str(i*10) + ' rounds')
-        plt.title('Random Bet Return Rate')
+            sns.distplot(netWin, hist=False, label = p)
+        plt.title('Martingale System Return Rate')
         plt.xlabel('Net Return in Unit (Starting from 100)')
         plt.ylabel('Frequency')
-        plt.savefig('result/60-100_random.png')
-        # plt.show()
+        # plt.savefig('result/100-500_martingale.png')
+        plt.show()
 
 if __name__ == '__main__':
     s = Simulation()
-    s.plot_density(['random'])
+    s.plot_density(['martingale', 'flat', '31', '1324'])

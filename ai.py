@@ -178,3 +178,98 @@ class Parlay31(Player):
         self.budget -= bet
         # TODO if we implement interactive version, player should be able to choose the bet
         return 1, bet
+
+class Martingale(Player):
+    '''subclass from Player
+
+    Simulate martingale system
+    If you loses double the betting money, starting from 1
+    '''
+
+    def __init__(self, name = 'guest'):
+        '''Constructor for RandomBet
+
+        Args:
+            name: name for the player. Defalut is 'guest'
+        '''
+        Player.__init__(self,name)
+
+    def bet(self):
+        ''' decides bet price and guess for the next deal
+
+        Overload this method so that every turn it will output random betting price
+
+        Returns:
+            a tuple representing guess and bet
+            ('guess', 'bet')
+            guess: the integer encoding for the game result, default is set to 1 (dealer)
+            bet: integer representation of the betting price (0 - 20)
+
+        Raises:
+            Exception: when the player tries to bet without any money left
+        '''
+        # throw an exception if the player does not have any money left
+        if self.budget == 0:
+            raise Exception ('you lost the game')
+        # martingale system
+        # starting from 1, if you win, you bet the current bet
+        # if you lose, you double it
+        if self.last_win == 0:
+            bet = 1
+        else:
+            bet = 2*self.current_bet
+
+        # if player tries to bet more than they have, it automatically plays all-in
+        if bet > self.budget:
+            bet = self.budget
+        # update current bet
+        self.current_bet = bet
+        # pay commission
+        self.budget -= bet
+        # TODO if we implement interactive version, player should be able to choose the bet
+        return 1, bet
+
+class Flat(Player):
+    '''subclass from Player
+
+    Simulate flat betting system
+    Keep betting 1
+    '''
+
+    def __init__(self, name = 'guest'):
+        '''Constructor for RandomBet
+
+        Args:
+            name: name for the player. Defalut is 'guest'
+        '''
+        Player.__init__(self,name)
+
+    def bet(self):
+        ''' decides bet price and guess for the next deal
+
+        Overload this method so that every turn it will output random betting price
+
+        Returns:
+            a tuple representing guess and bet
+            ('guess', 'bet')
+            guess: the integer encoding for the game result, default is set to 1 (dealer)
+            bet: integer representation of the betting price (0 - 20)
+
+        Raises:
+            Exception: when the player tries to bet without any money left
+        '''
+        # throw an exception if the player does not have any money left
+        if self.budget == 0:
+            raise Exception ('you lost the game')
+        # flat betting
+        bet = 1
+
+        # if player tries to bet more than they have, it automatically plays all-in
+        if bet > self.budget:
+            bet = self.budget
+        # update current bet
+        self.current_bet = bet
+        # pay commission
+        self.budget -= bet
+        # TODO if we implement interactive version, player should be able to choose the bet
+        return 1, bet
