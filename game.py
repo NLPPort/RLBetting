@@ -36,6 +36,8 @@ class State(object):
         self.active_players = []
         # allowing setup
         self.set_up = True
+        # total game to be played
+        self.total = 100
 
         if player_type == 'human':
             if not player_name in self.names:
@@ -221,7 +223,7 @@ class State(object):
         rl.Value = vtable
 
 
-    def update_state(self):
+    def update_state(self, training = False):
         ''' Run one deal of the game by updating the state object
 
         The game of baccarat proceeds as follows
@@ -230,6 +232,9 @@ class State(object):
         3. Distribute rewards to winners
         4. Remove players if they have no money left
         5. Continue
+
+        Args:
+            training: if true, when the agent loses the game, update the Vtable
         '''
         # block modifications in setting once the game starts
         self.set_up = False
@@ -257,8 +262,12 @@ class State(object):
                 player.update(value)
                 # if player's budget is 0, remove player from the active game
                 if player.budget == 0:
+                    # lost the game
+                    if training:
+                        player.end_game_reward(1,self.total)
                     self.active_players.remove(player)
                     self.players.append(player)
+
                 # player.show_stats()
 
     def returnResult(self, index = 0):
@@ -358,6 +367,7 @@ class Game(object):
     state = None
     rounds = 10
     ready_to_play = False
+    total = 100
     def __init__(self):
         pass
 
@@ -489,6 +499,7 @@ class Game(object):
 
             # all active players to players
             for p in self.state.active_players:
+                p.end_game_reward(0, self.total)
                 self.state.players.append(p)
 
             if do_print:

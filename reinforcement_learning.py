@@ -280,6 +280,31 @@ class ReinforcementLearning(Player):
         # TODO if we implement interactive version, player should be able to choose the bet
         return 1, bet
 
+    def end_game_reward(self, encoding, total):
+        ''' Update 7/16 version
+        When agent wins or loses, we need to teach them the value other than the net gain.
+        For example, if the agent survive all round, we need to give them award,
+        if the agent loses early, we need to give them penalty
+
+        Args:
+            encoding: 0 means survived, 1 means lost
+            total: total number of games to be played. Used to calculate the penalty
+        '''
+
+        # current state
+        budget  = self.percentRound(self.budget, 100)
+        gain  = self.percentRound(self.net_gain, 100)
+        last_win = self.last_win
+        consecutive_wins = self.consecutive_wins
+
+        state = (budget, gain, last_win, consecutive_wins)
+        if encoding == 0:
+            self.update_state_value(state, gain + self.round)
+        elif encoding == 1:
+            self.update_state_value(state, gain - 100*(total - self.round))
+
+
+
 if __name__ == '__main__':
     p = ReinforcementLearning()
     print p.search_next_state((1,2,3,4))

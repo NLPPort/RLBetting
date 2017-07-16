@@ -52,7 +52,8 @@ class Simulation(object):
         # plt.savefig('result/100-500_martingale.png')
         plt.show()
 
-    def train(self, iteration = 100000, print_result = False):
+
+    def train(self, iteration = 100, print_result = False):
         ''' train reinforcement learning agent with the given number of iterations
 
         Args:
@@ -64,22 +65,38 @@ class Simulation(object):
         netWin = np.array([])
         counter = 0
         for i in range(iteration):
-            avg = 0
             self.game.add_player(player_type = 'rl')
-            self.game.set_game_round(100)
-            mod100 = (counter % 100 == 0)
+            self.game.set_game_round(10)
+            mod100 = (counter % 1000 == 0)
             Vtable = self.game.train(do_print = mod100)
             self.game.update_Vtable(Vtable)
-            avg += self.game.state.returnResult()
-            if counter % 1000 == 0:
-                avg /= 1000
-                netWin = np.append(netWin, avg)
-                avg = 0
+            if mod100:
+                netWin = np.append(netWin, self.game.state.returnResult())
             self.game.reset()
             counter += 1
+        print self.get_Vtable_size(Vtable)
         if print_result:
             plt.plot(netWin)
             plt.show()
+
+
+    def get_Vtable_size(self, vtable):
+        '''Return the number of states the Vtable has visited
+
+        Args:
+            vtable: vtable to investigate
+
+        Returns:
+            number of states that vtable includes
+        '''
+        count = len(vtable)
+        for i in (vtable.keys()):
+            count += len(vtable[i])
+            for j in vtable[i].keys():
+                count += len(vtable[i][j])
+                for k in vtable[i][j].keys():
+                    count += len(vtable[i][j][k])
+        return count
 
 
 if __name__ == '__main__':
