@@ -55,7 +55,7 @@ class Simulation(object):
 
 
 
-    def train(self, iteration = 1000, print_result = False, save = False):
+    def train(self, iteration = 50000, print_result = False, save = False):
         ''' train reinforcement learning agent with the given number of iterations
 
         Args:
@@ -65,7 +65,8 @@ class Simulation(object):
         '''
 
         self.game = Game()
-        Vtable = {}
+        # 50000 + 50000 + 50000 + 50000
+        Vtable = self.continue_training()
         netWin = np.array([])
         counter = 0
         avg = 0
@@ -75,7 +76,7 @@ class Simulation(object):
             mod100 = (counter % 100 == 0)
             Vtable = self.game.train(do_print = mod100)
             self.game.update_Vtable(Vtable)
-            avg += self.game.state.returnResult()
+            avg += self.game.state.returnSurvival()
             if mod100:
                 netWin = np.append(netWin, avg/100)
                 avg = 0
@@ -88,7 +89,7 @@ class Simulation(object):
         plt.plot(netWin)
         netWin = np.array([])
 
-        print self.get_Vtable_size(Vtable)
+        # print self.get_Vtable_size(Vtable)
         if print_result:
             plt.show()
 

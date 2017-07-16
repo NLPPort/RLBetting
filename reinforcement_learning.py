@@ -73,9 +73,10 @@ class ReinforcementLearning(Player):
         gain  = self.percentRound(self.net_gain, 100)
         last_win = self.last_win
         consecutive_wins = self.consecutive_wins
+        current_bet = self.current_bet
 
         # craete a state tuple
-        current_state = (last_win, consecutive_wins)
+        current_state = (last_win, consecutive_wins, current_bet)
 
         return current_state
 
@@ -169,8 +170,9 @@ class ReinforcementLearning(Player):
         if consecutive_wins == 2:
             consecutive_wins = 0
 
+        current_bet = bet
         # search for the next state
-        state = (last_win, consecutive_wins)
+        state = (last_win, consecutive_wins, current_bet)
         nextState = self.search_next_state(state)
         return nextState
 
@@ -192,8 +194,9 @@ class ReinforcementLearning(Player):
         # consecutive_wins will be 0
         consecutive_wins = 0
 
+        current_bet = bet
         # search for the next state
-        state = (last_win, consecutive_wins)
+        state = (last_win, consecutive_wins, current_bet)
         nextState = self.search_next_state(state)
         return nextState
 
@@ -258,7 +261,7 @@ class ReinforcementLearning(Player):
             # lose .4462
             # tie .0953
             expectation = .4585*self.reward_win(bet)+.4462*self.reward_lose(bet)+.0953*self.search_next_state(current_state)
-            if max_expectation <= expectation:
+            if max_expectation < expectation:
                 max_expectation = expectation
                 best_command = i
 
