@@ -1,5 +1,6 @@
 from player import *
 from ai import *
+from reinforcement_learning import *
 from random import random
 
 class State(object):
@@ -102,6 +103,18 @@ class State(object):
             else:
                 raise Exception('player already exists')
 
+        if player_type == 'rl':
+            if not player_name in self.names:
+                # instanciate player
+                player = ReinforcementLearning(player_name)
+                # append player objet
+                self.active_players.append(player)
+                # add name list
+                self.names.add(player_name)
+            else:
+                raise Exception('player already exists')
+
+
     def add_player(self, player_type = 'human', name = ''):
         '''Add new players to the object
 
@@ -179,6 +192,34 @@ class State(object):
                     self.names.add(name)
                 else:
                     raise Exception('player already exists')
+
+            if player_type == 'rl':
+                if not name in self.names:
+                    # instanciate player
+                    player = ReinforcementLearning(name)
+                    # append player objet
+                    self.active_players.append(player)
+                    # add name list
+                    self.names.add(name)
+                else:
+                    raise Exception('player already exists')
+
+    def return_Vtable(self):
+        '''should be called only when the traning phase
+
+        return the V table from the learning agent
+        '''
+        rl = self.players[0]
+        return rl.Value
+
+    def set_vtable(self, vtable):
+        '''should be called only when the traning phase
+
+        set the vtable for the learining agent
+        '''
+        rl = self.players[0]
+        rl.Value = vtable
+
 
     def update_state(self):
         ''' Run one deal of the game by updating the state object
@@ -338,8 +379,8 @@ class Game(object):
         # terminal setting
         if console:
             # wait user input for the correct player type
-            while player_type not in ['human', 'random', '1324', '31', 'martingale', 'flat']:
-                player_type = raw_input("select player type (human, random, 1324, 31, martingale, flat): ")
+            while player_type not in ['human', 'random', '1324', '31', 'martingale', 'flat', 'rl']:
+                player_type = raw_input("select player type (human, random, 1324, 31, martingale, flat, rl): ")
             # wait user input fot the player name, default if empty
             player_name = raw_input("select player name (default if empty): ")
 
@@ -361,8 +402,8 @@ class Game(object):
                 # if Y, ask for another player
                 else:
                     player_type = ''
-                    while player_type not in ['human', 'random', '1324', '31', 'martingale', 'flat']:
-                        player_type = raw_input("select player type (human, random, 1324, 31, martingale, flat): ")
+                    while player_type not in ['human', 'random', '1324', '31', 'martingale', 'flat', 'rl']:
+                        player_type = raw_input("select player type (human, random, 1324, 31, martingale, flat, rl): ")
 
                     player_name = raw_input("select player name (default if empty): ")
 
@@ -379,7 +420,7 @@ class Game(object):
         Raises:
             Exception: when the invalid player type is detected
         '''
-        if player_type not in ['human', 'random', '1324', '31', 'martingale', 'flat']:
+        if player_type not in ['human', 'random', '1324', '31', 'martingale', 'flat', 'rl']:
             Exception('invalid player type')
 
         if not self.state:
@@ -428,7 +469,43 @@ class Game(object):
                     print ' '
                     p.show_stats()
         else:
-            print ('finish setup')
+            print ('finish setup first')
+
+    def train(self, do_print = True):
+        '''start the game loop for reinforcement learning agent
+
+        check if the set up is complete.
+        If so, start iterating the state update by the number of rounds
+
+        Args:
+            do_print: boolean to control if you want to print game stats on console
+
+        Return:
+            Vtable from the learning agent
+        '''
+        if self.set_up:
+            for _ in range(self.rounds):
+                self.state.update_state()
+
+            # all active players to players
+            for p in self.state.active_players:
+                self.state.players.append(p)
+
+            if do_print:
+                for p in self.state.players:
+                    print 'Stats for ' + p.get_name()
+                    print ' '
+                    p.show_stats()
+
+        return self.state.return_Vtable()
+
+    def update_Vtable(self, vtable):
+        ''' update the Vtable from the previous learning iteration
+
+        Args:
+            vtable: dict representation of vtable
+        '''
+        self.state.set_vtable(vtable)
 
     def reset(self):
         '''Clean up the setting for the another game

@@ -52,6 +52,36 @@ class Simulation(object):
         # plt.savefig('result/100-500_martingale.png')
         plt.show()
 
+    def train(self, iteration = 100000, print_result = False):
+        ''' train reinforcement learning agent with the given number of iterations
+
+        Args:
+            iteration: number of iteration the agent plays the game
+        '''
+
+        self.game = Game()
+        Vtable = {}
+        netWin = np.array([])
+        counter = 0
+        for i in range(iteration):
+            avg = 0
+            self.game.add_player(player_type = 'rl')
+            self.game.set_game_round(100)
+            mod100 = (counter % 100 == 0)
+            Vtable = self.game.train(do_print = mod100)
+            self.game.update_Vtable(Vtable)
+            avg += self.game.state.returnResult()
+            if counter % 1000 == 0:
+                avg /= 1000
+                netWin = np.append(netWin, avg)
+                avg = 0
+            self.game.reset()
+            counter += 1
+        if print_result:
+            plt.plot(netWin)
+            plt.show()
+
+
 if __name__ == '__main__':
     s = Simulation()
-    s.plot_density(['martingale', 'flat', '31', '1324'])
+    s.train(print_result = True)
