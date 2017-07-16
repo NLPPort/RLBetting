@@ -270,6 +270,24 @@ class State(object):
 
                 # player.show_stats()
 
+    def returnSurvival(self, index = 0):
+        ''' Return the net win of the player at given index
+
+        Args:
+            index: the index of player in the list, default is 0
+
+        Return:
+            the total rounds of game the given player played
+
+        Raises:
+            Exception: when index is out of range
+        '''
+        if index+1 < len(self.players):
+            raise Exception('Index out of range')
+
+        return self.players[0].round
+
+
     def returnResult(self, index = 0):
         ''' Return the net win of the player at given index
 

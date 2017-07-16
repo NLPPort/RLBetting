@@ -1,5 +1,6 @@
 from player import *
 from random import random
+import json
 
 class ReinforcementLearning(Player):
     ''' subclass from player
@@ -63,6 +64,22 @@ class ReinforcementLearning(Player):
         '''
         return round(float(value)/float(base),1)*10
 
+    def get_current_state(self):
+        ''' return the tuple representation of current state
+        '''
+        # current state
+        reward  = self.net_gain
+        budget  = self.percentRound(self.budget, 100)
+        gain  = self.percentRound(self.net_gain, 100)
+        last_win = self.last_win
+        consecutive_wins = self.consecutive_wins
+
+        # craete a state tuple
+        current_state = (last_win, consecutive_wins)
+
+        return current_state
+
+
     def search_next_state(self, state_tuple):
         ''' search for the state in V table. If this is the first time to
         explore this state, return a random value. otherwise return a
@@ -80,25 +97,25 @@ class ReinforcementLearning(Player):
             if i == last_states:
                 # if already registered, return the value
                 try:
-                    next_state_value = next_layer[s]
+                    next_state_value = next_layer[str(s)]
                 # else register random value
                 except:
-                    next_state_value = random()
-                    next_layer[s] = next_state_value
+                    next_state_value = 10*random()
+                    next_layer[str(s)] = next_state_value
             elif i == 0:
                 # iterate Value dict tree
                 # whenever sees a new key, create a new dict
                 try:
-                    next_layer = self.Value[s]
+                    next_layer = self.Value[str(s)]
                 except:
-                    self.Value[s] = {}
-                    next_layer = self.Value[s]
+                    self.Value[str(s)] = {}
+                    next_layer = self.Value[str(s)]
             else:
                 try:
-                    next_layer = next_layer[s]
+                    next_layer = next_layer[str(s)]
                 except:
-                    next_layer[s] = {}
-                    next_layer = next_layer[s]
+                    next_layer[str(s)] = {}
+                    next_layer = next_layer[str(s)]
         return next_state_value
 
     def update_state_value(self, state_tuple, value):
@@ -115,21 +132,21 @@ class ReinforcementLearning(Player):
         next_state_value = 0
         for i,s in enumerate(state_tuple):
             if i == last_states:
-                next_layer[s] = value
+                next_layer[str(s)] = value
             elif i == 0:
                 # iterate Value dict tree
                 # whenever sees a new key, create a new dict
                 try:
-                    next_layer = self.Value[s]
+                    next_layer = self.Value[str(s)]
                 except:
-                    self.Value[s] = {}
-                    next_layer = self.Value[s]
+                    self.Value[str(s)] = {}
+                    next_layer = self.Value[str(s)]
             else:
                 try:
-                    next_layer = next_layer[s]
+                    next_layer = next_layer[str(s)]
                 except:
-                    next_layer[s] = {}
-                    next_layer = next_layer[s]
+                    next_layer[str(s)] = {}
+                    next_layer = next_layer[str(s)]
 
 
     def reward_win(self, bet):
@@ -153,7 +170,7 @@ class ReinforcementLearning(Player):
             consecutive_wins = 0
 
         # search for the next state
-        state = (budget, gain, last_win, consecutive_wins)
+        state = (last_win, consecutive_wins)
         nextState = self.search_next_state(state)
         return nextState
 
@@ -176,7 +193,7 @@ class ReinforcementLearning(Player):
         consecutive_wins = 0
 
         # search for the next state
-        state = (budget, gain, last_win, consecutive_wins)
+        state = (last_win, consecutive_wins)
         nextState = self.search_next_state(state)
         return nextState
 
@@ -230,7 +247,7 @@ class ReinforcementLearning(Player):
         consecutive_wins = self.consecutive_wins
 
         # craete a state tuple
-        current_state = (budget, gain, last_win, consecutive_wins)
+        current_state = self.get_current_state()
 
         max_expectation = float('-inf')
         best_command = -1
@@ -241,12 +258,12 @@ class ReinforcementLearning(Player):
             # lose .4462
             # tie .0953
             expectation = .4585*self.reward_win(bet)+.4462*self.reward_lose(bet)+.0953*self.search_next_state(current_state)
-            if max_expectation < expectation:
+            if max_expectation <= expectation:
                 max_expectation = expectation
                 best_command = i
 
         # the value iteration using bellman equation
-        new_V = self.gamma * max_expectation + reward
+        new_V = self.gamma * max_expectation
         # register the value
         self.update_state_value(current_state, new_V)
         return best_command
@@ -284,7 +301,10 @@ class ReinforcementLearning(Player):
         ''' Update 7/16 version
         When agent wins or loses, we need to teach them the value other than the net gain.
         For example, if the agent survive all round, we need to give them award,
-        if the agent loses early, we need to give them penalty
+        if the agent loses early, we need to give them penalty.
+
+        Issue: once it survives, it stopped learning (survival becomes the objective)
+        Then it stated to bet only 1
 
         Args:
             encoding: 0 means survived, 1 means lost
@@ -297,17 +317,33 @@ class ReinforcementLearning(Player):
         last_win = self.last_win
         consecutive_wins = self.consecutive_wins
 
-        state = (budget, gain, last_win, consecutive_wins)
+        state = self.get_current_state()
         if encoding == 0:
-            self.update_state_value(state, gain + self.round)
+            self.update_state_value(state, 100 * gain + self.round)
         elif encoding == 1:
             self.update_state_value(state, gain - 100*(total - self.round))
 
+    def dump_vtable(self):
+        ''' dump the vtable after training into json foramt
+        '''
+        print len(self.Value)
+        print 'writing'
+        with open('data/train.txt', 'w') as outfile:
+            json.dump(self.Value, outfile)
 
+    def load_vtable(self):
+        ''' load the vtable from json file
+        '''
+        with open('data/train.txt') as json_file:
+            v = json.load(json_file)
+            self.Value = v
 
 if __name__ == '__main__':
     p = ReinforcementLearning()
     print p.search_next_state((1,2,3,4))
+    p.dump_vtable()
+    print p.update_state_value((1,2,3,4), 0)
     print p.search_next_state((1,2,3,4))
-    print p.update_state_value((1,2,3,4), 1)
-    print p.search_next_state((1,2,3,4))
+    p2 = ReinforcementLearning()
+    p2.load_vtable()
+    print p2.search_next_state((1,2,3,4))

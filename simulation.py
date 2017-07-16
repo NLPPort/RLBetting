@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from game import *
+import json
 
 class Simulation(object):
     ''' Class to automize learning / testing process
@@ -53,30 +54,42 @@ class Simulation(object):
         plt.show()
 
 
-    def train(self, iteration = 100, print_result = False):
+
+    def train(self, iteration = 1000, print_result = False, save = False):
         ''' train reinforcement learning agent with the given number of iterations
 
         Args:
             iteration: number of iteration the agent plays the game
+            print_result: if True print the learning status on console
+            save: if True save the learning result to json file
         '''
 
         self.game = Game()
         Vtable = {}
         netWin = np.array([])
         counter = 0
+        avg = 0
         for i in range(iteration):
             self.game.add_player(player_type = 'rl')
-            self.game.set_game_round(10)
-            mod100 = (counter % 1000 == 0)
+            self.game.set_game_round(100)
+            mod100 = (counter % 100 == 0)
             Vtable = self.game.train(do_print = mod100)
             self.game.update_Vtable(Vtable)
+            avg += self.game.state.returnResult()
             if mod100:
-                netWin = np.append(netWin, self.game.state.returnResult())
+                netWin = np.append(netWin, avg/100)
+                avg = 0
             self.game.reset()
             counter += 1
+
+        if save:
+            self.save_training_result(Vtable)
+
+        plt.plot(netWin)
+        netWin = np.array([])
+
         print self.get_Vtable_size(Vtable)
         if print_result:
-            plt.plot(netWin)
             plt.show()
 
 
@@ -92,13 +105,21 @@ class Simulation(object):
         count = len(vtable)
         for i in (vtable.keys()):
             count += len(vtable[i])
-            for j in vtable[i].keys():
-                count += len(vtable[i][j])
-                for k in vtable[i][j].keys():
-                    count += len(vtable[i][j][k])
         return count
 
+    def save_training_result(self, vtable):
+        ''' dump the vtable after training into json foramt
+        '''
+        with open('data/train.txt', 'w') as outfile:
+            json.dump(vtable, outfile)
+
+    def continue_training(self):
+        ''' load the vtable from json file
+        '''
+        with open('data/train.txt') as json_file:
+            v = json.load(json_file)
+            return v
 
 if __name__ == '__main__':
     s = Simulation()
-    s.train(print_result = True)
+    s.train(print_result = True, save = True)
