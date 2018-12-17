@@ -78,23 +78,28 @@ This is the core of game engine. For each game simulation, Player class will mak
 ## Training
 
 ## Result
+The following is the distribution of net win, starting with 100 units of money (0 means the agent leaves the game with 100 units). The peak at -100 indicates the agent lost money completely, and the peak in the positive range indicates the agent left the game with some profits.
 
 - Baseline (Random bet)
+The longer the agent plays, the riskier this strategy becomes. Intrestingly, it has the highest upper range (around 800). 
 <p align="left">
   <img src="./result/random/100-500_random.png" width="50%">
 </p>
 
 - 31 System 
+Playing 100 games with 31 Systems have a decently high probability to leave the game with some profits.
 <p align="left">
   <img src="./result/31System/100-500_31.png" width="50%">
 </p>
 
 - Martingale System
+The longer the agent plays, the riskier this strategy becomes. However, the return becomes larger (with decreasing probablity)
 <p align="left">
   <img src="./result/100-500_martingale.png" width="50%">
 </p>
 
 - 1324 System
+The agent can finish playing the game without losing money. Low risk low return.
 <p align="left">
   <img src="./result/1324/100-500_1324.png" width="50%">
 </p>
