@@ -78,3 +78,23 @@ This is the core of game engine. For each game simulation, Player class will mak
 ## Training
 
 ## Result
+
+- Baseline (Random bet)
+<p align="left">
+  <img src="./result/random/100-500_random.png" width="50%">
+</p>
+
+- 31 System 
+<p align="left">
+  <img src="./result/31System/100-500_31.png" width="50%">
+</p>
+
+- Martingale System
+<p align="left">
+  <img src="./result/100-500_martingale.png" width="50%">
+</p>
+
+- 1324 System
+<p align="left">
+  <img src="./result/1324/100-500_1324.png" width="50%">
+</p>
